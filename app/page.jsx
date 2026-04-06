@@ -482,7 +482,7 @@ function ContactSection({ isMobile }) {
     setStatus("sending");
     try {
       // Use full absolute URL — works regardless of subfolder or CDN setup
-      const url = "https://sample.hawarebuilders.in/contact.php";
+      const url = "https://skydigi-lights.vercel.app/contact.php";
       
       const res = await fetch(url, {
         method: "POST",
