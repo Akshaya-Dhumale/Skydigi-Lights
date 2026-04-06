@@ -405,7 +405,7 @@ function GallerySection({ scrollTo }) {
     </section>
   );
 }
-
+/*
 function ContactSection() {
   const [sent, setSent] = useState(false);
   return (
@@ -489,7 +489,183 @@ const PP_ITEMS = [
   { title: "06. Your Rights", text: "You have the right to access, correct, or delete your personal data at any time. Contact us at privacy@skydigilights.com. We will respond within 30 days." },
   { title: "07. Contact & Updates", text: "This policy is effective as of January 2024 and may be updated periodically. For privacy enquiries: Skydigi Lights, Mumbai, Maharashtra, India · privacy@skydigilights.com" },
 ];
+*/
 
+function ContactSection({ isMobile }) {
+  const pad = isMobile ? "72px 20px" : "110px 5vw";
+
+  const [form, setForm] = useState({
+    from_name: "", phone: "", from_email: "", inquiry_type: "", message: "",
+  });
+  // status: "idle" | "sending" | "success" | "error"
+  const [status, setStatus] = useState("idle");
+  const [errMsg, setErrMsg] = useState("");
+
+  const update = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }));
+
+  const handleSubmit = async () => {
+    if (!form.from_name.trim() || !form.phone.trim()) {
+      alert("Please enter your name and phone number.");
+      return;
+    }
+    setStatus("sending");
+    try {
+      // Use full absolute URL — works regardless of subfolder or CDN setup
+      const url = "https://skydigi-lights.vercel.app/contact.php";
+      
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      let data = {};
+      try {
+        data = await res.json();
+      } catch {
+        // Response wasn't JSON — likely PHP error page or 404
+        const text = await res.text().catch(() => "");
+        setErrMsg("Server returned non-JSON response. Make sure contact.php is in public_html. Got: " + text.slice(0, 120));
+        setStatus("error");
+        return;
+      }
+
+      if (res.ok && data.success) {
+        setStatus("success");
+        setForm({ from_name: "", phone: "", from_email: "", inquiry_type: "", message: "" });
+      } else {
+        setErrMsg(data.message || "Unknown error");
+        setStatus("error");
+      }
+    } catch (err) {
+      setErrMsg("Network error: " + err.message);
+      setStatus("error");
+    }
+  };
+
+  const focusStyle = (e) => { e.currentTarget.style.borderColor = "#FFD70044"; };
+  const blurStyle  = (e) => { e.currentTarget.style.borderColor = "#ffffff0e"; };
+
+  return (
+    <section id="contact" style={{ padding: pad, background: "#050508" }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit,minmax(280px,1fr))", gap: isMobile ? 48 : 72, alignItems: "start" }}>
+
+        {/* Left — info */}
+        <AnimSection>
+          <SectionTag>Get In Touch</SectionTag>
+          <h2 style={{ fontSize: "clamp(28px,6vw,58px)", fontWeight: 300, lineHeight: 1.05, marginBottom: 10 }}>
+            Let&apos;s Create <br /><span style={{ color: "#FFD700" }}>Something</span><br />Brilliant
+          </h2>
+          <Divider />
+          <p style={{ color: "#888", fontSize: isMobile ? 15 : 16, lineHeight: 1.8, marginBottom: 36, fontWeight: 300 }}>
+            Have a project in mind? An event to illuminate? We&apos;d love to hear from you.
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 18, marginBottom: 32 }}>
+            {[
+              { icon: "📍", label: "Location", value: "Mumbai, Maharashtra, India" },
+              { icon: "📞", label: "Phone",    value: "+91 98765 43210" },
+              { icon: "✉️", label: "Email",    value: "hello@skydigilights.com" },
+              { icon: "⏰", label: "Hours",    value: "Mon–Sat: 9AM – 7PM IST" },
+            ].map(({ icon, label, value }) => (
+              <div key={label} style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                <div style={{ width: 36, height: 36, borderRadius: "50%", border: "1px solid #FFD70022", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 14 }}>{icon}</div>
+                <div>
+                  <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 10, letterSpacing: 3, color: "#FFD700", marginBottom: 2 }}>{label}</div>
+                  <div style={{ color: "#ddd", fontSize: 14 }}>{value}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {["Instagram", "Facebook", "WhatsApp", "YouTube"].map(s => (
+              <button key={s} style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 10, letterSpacing: 2, padding: "7px 12px", border: "1px solid #ffffff11", color: "#777", cursor: "pointer", transition: "all 0.3s", textTransform: "uppercase", background: "none" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "#FFD70033"; e.currentTarget.style.color = "#FFD700"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "#ffffff11"; e.currentTarget.style.color = "#777"; }}
+              >{s}</button>
+            ))}
+          </div>
+        </AnimSection>
+
+        {/* Right — form */}
+        <AnimSection delay={0.15}>
+          <div style={{ background: "#0a0a13", border: "1px solid #ffffff09", padding: isMobile ? "28px 20px" : "42px 34px" }}>
+            <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 15, letterSpacing: 3, marginBottom: 24 }}>SEND A MESSAGE</div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <input
+                placeholder="Your Name *"
+                value={form.from_name}
+                onChange={update("from_name")}
+                style={inputStyle}
+                onFocus={focusStyle} onBlur={blurStyle}
+              />
+              <input
+                placeholder="Phone / WhatsApp *"
+                value={form.phone}
+                onChange={update("phone")}
+                style={inputStyle}
+                onFocus={focusStyle} onBlur={blurStyle}
+              />
+              <input
+                placeholder="Email Address"
+                value={form.from_email}
+                onChange={update("from_email")}
+                style={inputStyle}
+                onFocus={focusStyle} onBlur={blurStyle}
+              />
+              <select
+                value={form.inquiry_type}
+                onChange={update("inquiry_type")}
+                style={{ ...inputStyle, cursor: "pointer" }}
+                onFocus={focusStyle} onBlur={blurStyle}
+              >
+                <option value="">Select Inquiry Type</option>
+                <option>Purchase Lighting Products</option>
+                <option>Rent for Event</option>
+                <option>Home / Office Installation</option>
+                <option>Corporate Project</option>
+                <option>Custom Quote</option>
+              </select>
+              <textarea
+                placeholder="Describe your project..."
+                value={form.message}
+                onChange={update("message")}
+                rows={4}
+                style={{ ...inputStyle, resize: "vertical" }}
+                onFocus={focusStyle} onBlur={blurStyle}
+              />
+
+              {/* Submit button */}
+              <PrimaryBtn
+                onClick={handleSubmit}
+                style={{ width: "100%", padding: 14, opacity: status === "sending" ? 0.7 : 1 }}
+              >
+                {status === "sending" ? "Sending..." : status === "success" ? "Message Sent ✓" : "Send Enquiry →"}
+              </PrimaryBtn>
+            </div>
+
+            {/* Status messages */}
+            {status === "success" && (
+              <div style={{ marginTop: 16, padding: "12px 16px", background: "#0a2a0a", border: "1px solid #FFD70033", fontFamily: "'Rajdhani',sans-serif", fontSize: 13, color: "#FFD700", letterSpacing: 1 }}>
+                ✓ Your enquiry has been sent! We will contact you within 24 hours.
+              </div>
+            )}
+            {status === "error" && (
+              <div style={{ marginTop: 16, padding: "12px 16px", background: "#2a0a0a", border: "1px solid #ff444433", fontFamily: "'Rajdhani',sans-serif", fontSize: 12, color: "#ff6666", letterSpacing: 1, lineHeight: 1.6 }}>
+                ✕ {errMsg || "Something went wrong. Please call us directly or try again."}
+              </div>
+            )}
+
+            <p style={{ color: "#383838", fontSize: 11, marginTop: 14, fontFamily: "'Rajdhani',sans-serif", letterSpacing: 1, lineHeight: 1.6 }}>
+              * Required fields. We typically respond within 24 hours.
+            </p>
+          </div>
+        </AnimSection>
+
+      </div>
+    </section>
+  );
+}
 function PrivacySection() {
   return (
     <section id="privacy" style={{ padding: "90px 5vw", background: "#070710", borderTop: "1px solid #ffffff07" }}>
